@@ -12,6 +12,7 @@ ethereum-types = { version = "0.9.0", default-features = false }
 hex = { version = "2.0", package = "rustc-hex" }
 hex-literal = "0.2.1"
 uint = { version = "0.8.2", default-features = false }
+paste = "0.1.6"
 
 [features]
 default = ["std"]
