@@ -1,20 +1,18 @@
 // Copyright 2015-2020 Parity Technologies
+// Copyright 2020 Snowfork
 //
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE or
+// http://www.apache.org/licenses/LICENSE-2.0>. This file may not be 
+// copied, modified, or distributed except according to those terms.
 
 //! Contract event.
+use crate::std::BTreeMap;
+use crate::std::Vec;
 use tiny_keccak::Keccak;
-use sp_std::collections::btree_map::BTreeMap;
-use sp_std::prelude::*;
 
-use crate::{
-	decode, Error, H256, ParamType, Result, Token,
-};
-
+use crate::{decode, Error, ParamType, Result, Token, H256};
 
 /// Event param specification.
 #[derive(Debug, Clone, PartialEq)]
@@ -22,8 +20,8 @@ pub struct Param {
 	/// Param type.
 	pub kind: ParamType,
 	/// Indexed flag. If true, param is used to build block bloom.
-	pub indexed: bool,}
-
+	pub indexed: bool,
+}
 
 /// Contract event.
 #[derive(Clone, Debug, PartialEq)]
@@ -37,7 +35,6 @@ pub struct Event {
 }
 
 impl Event {
-
 	fn signature_keccak256(&self) -> H256 {
 		let mut result = [0u8; 32];
 		let mut sponge = Keccak::new_keccak256();
@@ -55,7 +52,6 @@ impl Event {
 		self.inputs.iter().enumerate().filter(|(_, p)| p.indexed == indexed).map(|(i, _)| i).collect()
 	}
 
-
 	// Converts param types for indexed parameters to bytes32 where appropriate
 	// This applies to strings, arrays, structs and bytes to follow the encoding of
 	// these indexed param types according to
@@ -72,7 +68,6 @@ impl Event {
 	}
 
 	pub fn decode(&mut self, topics: Vec<H256>, data: Vec<u8>) -> Result<Vec<Token>> {
-	
 		let topics_len = topics.len();
 		// obtains all params info
 		let topic_params_index = self.indices(true);
@@ -112,10 +107,8 @@ impl Event {
 
 		let named_tokens = topics_named_tokens.chain(data_named_tokens).collect::<BTreeMap<usize, Token>>();
 
-		let tokens: Vec<Token> = self
-			.inputs.iter().enumerate().map(|t| t.0)
-			.map(|i| named_tokens[&i].clone())
-			.collect();
+		let tokens: Vec<Token> =
+			self.inputs.iter().enumerate().map(|t| t.0).map(|i| named_tokens[&i].clone()).collect();
 
 		Ok(tokens)
 	}
@@ -124,14 +117,9 @@ impl Event {
 #[cfg(test)]
 mod tests {
 
-	use tiny_keccak::Keccak;
-	use crate::{
-		token::Token, H256,
-		Event, Param, ParamType,
-	};
+	use crate::{token::Token, Event, Param, ParamType, H256};
 	use hex::FromHex;
-
-	use std::prelude::v1::*;
+	use tiny_keccak::Keccak;
 
 	fn keccak256(data: &str) -> H256 {
 		let mut result = [0u8; 32];
@@ -146,37 +134,33 @@ mod tests {
 		let mut event = Event {
 			signature: "foo(int256,int256,address,address,string,int256[],address[5])",
 			inputs: vec![
-				Param { kind: ParamType::Int(256), indexed: false, },
-				Param { kind: ParamType::Int(256), indexed: true, },
-				Param { kind: ParamType::Address, indexed: false, },
-				Param { kind: ParamType::Address, indexed: true, },
-				Param { kind: ParamType::String, indexed: true, },
-				Param {
-					kind: ParamType::Array(Box::new(ParamType::Int(256))),
-					indexed: true,
-				},
-				Param {
-					kind: ParamType::FixedArray(Box::new(ParamType::Address), 5),
-					indexed: true,
-				},
+				Param { kind: ParamType::Int(256), indexed: false },
+				Param { kind: ParamType::Int(256), indexed: true },
+				Param { kind: ParamType::Address, indexed: false },
+				Param { kind: ParamType::Address, indexed: true },
+				Param { kind: ParamType::String, indexed: true },
+				Param { kind: ParamType::Array(Box::new(ParamType::Int(256))), indexed: true },
+				Param { kind: ParamType::FixedArray(Box::new(ParamType::Address), 5), indexed: true },
 			],
 			anonymous: false,
 		};
 
-		let topics: Vec<H256> =  vec![
-				keccak256("foo(int256,int256,address,address,string,int256[],address[5])"),
-				"0000000000000000000000000000000000000000000000000000000000000002".parse().unwrap(),
-				"0000000000000000000000001111111111111111111111111111111111111111".parse().unwrap(),
-				"00000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".parse().unwrap(),
-				"00000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".parse().unwrap(),
-				"00000000000000000ccccccccccccccccccccccccccccccccccccccccccccccc".parse().unwrap(),
-			];
-		
-		let data = concat!("0000000000000000000000000000000000000000000000000000000000000003",
-						   "0000000000000000000000002222222222222222222222222222222222222222")
-				.from_hex()
-				.unwrap();
-		
+		let topics: Vec<H256> = vec![
+			keccak256("foo(int256,int256,address,address,string,int256[],address[5])"),
+			"0000000000000000000000000000000000000000000000000000000000000002".parse().unwrap(),
+			"0000000000000000000000001111111111111111111111111111111111111111".parse().unwrap(),
+			"00000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".parse().unwrap(),
+			"00000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".parse().unwrap(),
+			"00000000000000000ccccccccccccccccccccccccccccccccccccccccccccccc".parse().unwrap(),
+		];
+
+		let data = concat!(
+			"0000000000000000000000000000000000000000000000000000000000000003",
+			"0000000000000000000000002222222222222222222222222222222222222222"
+		)
+		.from_hex()
+		.unwrap();
+
 		let tokens = event.decode(topics, data).unwrap();
 
 		assert_eq!(

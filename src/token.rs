@@ -1,15 +1,16 @@
 // Copyright 2015-2020 Parity Technologies
+// Copyright 2020 Snowfork
 //
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE or
+// http://www.apache.org/licenses/LICENSE-2.0>. This file may not be 
+// copied, modified, or distributed except according to those terms.
 
 //! Ethereum ABI params.
-use crate::{U256, Address, ParamType};
-use sp_std::prelude::*;
+use crate::{Address, ParamType, U256};
 
+use crate::std::Vec;
 
 /// Ethereum ABI params.
 #[derive(Debug, PartialEq, Clone)]
@@ -213,8 +214,6 @@ impl Token {
 #[cfg(test)]
 mod tests {
 	use crate::{ParamType, Token};
-	use std::prelude::v1::*;
-
 
 	#[test]
 	fn test_type_check() {
