@@ -221,9 +221,8 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 
 #[cfg(test)]
 mod tests {
-
-	use std::boxed::Box;
-	use std::vec::Vec;
+	
+	use std::prelude::v1::*;
 
 	use crate::{decode, ParamType, Token};
 	use hex_literal::hex;

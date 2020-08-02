@@ -1,10 +1,7 @@
 #![no_std]
 
-//#[cfg(test)]
-//#[macro_use]
-//extern crate std;
-
 #[cfg(feature = "std")]
+#[allow(unused_imports)]
 #[macro_use]
 extern crate std;
 

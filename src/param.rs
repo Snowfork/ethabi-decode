@@ -60,7 +60,7 @@ impl ParamType {
 mod tests {
 	use crate::ParamType;
 
-	use sp_std::prelude::*;
+	use std::prelude::v1::*;
 
 	#[test]
 	fn test_is_dynamic() {

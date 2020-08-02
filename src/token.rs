@@ -213,7 +213,7 @@ impl Token {
 #[cfg(test)]
 mod tests {
 	use crate::{ParamType, Token};
-	use sp_std::prelude::*;
+	use std::prelude::v1::*;
 
 
 	#[test]

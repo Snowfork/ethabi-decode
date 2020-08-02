@@ -22,10 +22,7 @@ pub struct Param {
 	/// Param type.
 	pub kind: ParamType,
 	/// Indexed flag. If true, param is used to build block bloom.
-	pub indexed: bool,
-
-	index: usize,
-}
+	pub indexed: bool,}
 
 
 /// Contract event.
@@ -133,8 +130,8 @@ mod tests {
 		Event, Param, ParamType,
 	};
 	use hex::FromHex;
-	use std::boxed::Box;
-	use std::vec::Vec;
+
+	use std::prelude::v1::*;
 
 	fn keccak256(data: &str) -> H256 {
 		let mut result = [0u8; 32];
@@ -149,20 +146,18 @@ mod tests {
 		let mut event = Event {
 			signature: "foo(int256,int256,address,address,string,int256[],address[5])",
 			inputs: vec![
-				Param { kind: ParamType::Int(256), indexed: false, index: 0 },
-				Param { kind: ParamType::Int(256), indexed: true, index: 0 },
-				Param { kind: ParamType::Address, indexed: false, index: 0 },
-				Param { kind: ParamType::Address, indexed: true, index:0 },
-				Param { kind: ParamType::String, indexed: true, index: 0 },
+				Param { kind: ParamType::Int(256), indexed: false, },
+				Param { kind: ParamType::Int(256), indexed: true, },
+				Param { kind: ParamType::Address, indexed: false, },
+				Param { kind: ParamType::Address, indexed: true, },
+				Param { kind: ParamType::String, indexed: true, },
 				Param {
 					kind: ParamType::Array(Box::new(ParamType::Int(256))),
 					indexed: true,
-					index: 0
 				},
 				Param {
 					kind: ParamType::FixedArray(Box::new(ParamType::Address), 5),
 					indexed: true,
-					index: 0,
 				},
 			],
 			anonymous: false,
