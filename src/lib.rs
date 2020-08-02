@@ -20,7 +20,7 @@ mod token;
 
 pub use crate::{
 	decoder::decode,
-	errors::{Error, Result},
+	errors::Error,
 	event::{Event, Param},
 	param::ParamType,
 	token::Token,

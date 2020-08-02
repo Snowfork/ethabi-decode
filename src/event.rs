@@ -12,7 +12,7 @@ use crate::std::BTreeMap;
 use crate::std::Vec;
 use tiny_keccak::Keccak;
 
-use crate::{decode, Error, ParamType, Result, Token, H256};
+use crate::{decode, Error, ParamType, Token, H256};
 
 /// Event param specification.
 #[derive(Debug, Clone, PartialEq)]
@@ -67,7 +67,7 @@ impl Event {
 		}
 	}
 
-	pub fn decode(&mut self, topics: Vec<H256>, data: Vec<u8>) -> Result<Vec<Token>> {
+	pub fn decode(&mut self, topics: Vec<H256>, data: Vec<u8>) -> Result<Vec<Token>, Error> {
 		let topics_len = topics.len();
 		// obtains all params info
 		let topic_params_index = self.indices(true);

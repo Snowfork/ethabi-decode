@@ -8,8 +8,6 @@
 
 #[cfg(not(feature = "std"))]
 pub use alloc::{boxed::Box, collections::btree_map::BTreeMap, vec::Vec};
-#[cfg(not(feature = "std"))]
-pub use core::result::Result;
 
 #[cfg(feature = "std")]
-pub use std::{boxed::Box, collections::btree_map::BTreeMap, result::Result, vec::Vec};
+pub use std::{boxed::Box, collections::btree_map::BTreeMap, vec::Vec};

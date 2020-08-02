@@ -8,7 +8,7 @@
 // copied, modified, or distributed except according to those terms.
 
 /// Ethabi result type
-pub type Result<T> = crate::std::Result<T, Error>;
+//pub type Result<T> = crate::std::Result<T, Error>;
 
 /// Ethabi errors
 #[derive(Debug)]
@@ -19,8 +19,6 @@ pub enum Error {
 	InvalidData,
 	/// Integer parsing error.
 	ParseInt,
-	/// UTF-8 parsing error.
-	Hex(hex::FromHexError),
 	/// Other errors.
 	Other,
 }
@@ -32,10 +30,5 @@ impl From<uint::FromDecStrErr> for Error {
 			InvalidCharacter => Error::Other,
 			InvalidLength => Error::Other,
 		}
-	}
-}
-impl From<hex::FromHexError> for Error {
-	fn from(err: hex::FromHexError) -> Self {
-		Error::Hex(err)
 	}
 }
