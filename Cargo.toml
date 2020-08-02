@@ -1,0 +1,30 @@
+[package]
+name = "substrate-ethabi"
+version = "0.1.0"
+authors = ["Vincent Geddes <vincent.geddes@hey.com>"]
+edition = "2018"
+
+[dependencies]
+hex = { version = "2.0", package = "rustc-hex" }
+tiny-keccak = { version = "1.4" }
+ethereum-types = { version = "0.9.0", default-features = false }
+uint = { version = "0.8.2", default-features = false }
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc4'
+version = '2.0.0-rc4'
+
+[dev-dependencies]
+hex-literal = "0.2.1"
+paste = "0.1.6"
+
+[features]
+default = ["std"]
+std = [
+    'hex/std',
+    'uint/std',
+    'ethereum-types/std',
+    'sp-std/std',
+]
