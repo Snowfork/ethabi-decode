@@ -40,6 +40,7 @@ impl Event {
 		self.inputs.iter().filter(|p| p.indexed == indexed).cloned().collect()
 	}
 
+	/// Returns indices of all params of the event
 	fn indices(&self, indexed: bool) -> Vec<usize> {
 		self.inputs.iter().enumerate().filter(|(_, p)| p.indexed == indexed).map(|(i, _)| i).collect()
 	}
@@ -60,14 +61,8 @@ impl Event {
 	}
 
 	pub fn decode(&mut self, topics: Vec<H256>, data: Vec<u8>) -> Result<Vec<Token>, Error> {
-		let topics_len = topics.len();
-		// obtains all params info
-		let topic_params_index = self.indices(true);
-		let data_params_index = self.indices(false);
 
-		let topic_params = self.indexed_params(true);
-		let data_params = self.indexed_params(false);
-		// then take first topic if event is not anonymous
+		// Take first topic if event is not anonymous
 		let to_skip = if self.anonymous {
 			0
 		} else {
@@ -78,6 +73,15 @@ impl Event {
 			}
 			1
 		};
+
+		let topics_len = topics.len();
+
+		// obtains all params info
+		let topic_params = self.indexed_params(true);
+		let data_params = self.indexed_params(false);
+		let topic_params_indices = self.indices(true);
+		let data_params_indices = self.indices(false);
+
 
 		let topic_types =
 			topic_params.iter().map(|p| self.convert_topic_param_type(&p.kind)).collect::<Vec<ParamKind>>();
@@ -91,11 +95,11 @@ impl Event {
 			return Err(Error::InvalidData);
 		}
 
-		let topics_named_tokens = topic_params_index.into_iter().zip(topic_tokens.into_iter());
+		let topics_named_tokens = topic_params_indices.into_iter().zip(topic_tokens.into_iter());
 
 		let data_types = data_params.iter().map(|p| p.kind.clone()).collect::<Vec<ParamKind>>();
 		let data_tokens = decode(&data_types, &data)?;
-		let data_named_tokens = data_params_index.into_iter().zip(data_tokens.into_iter());
+		let data_named_tokens = data_params_indices.into_iter().zip(data_tokens.into_iter());
 
 		let named_tokens = topics_named_tokens.chain(data_named_tokens).collect::<BTreeMap<usize, Token>>();
 
