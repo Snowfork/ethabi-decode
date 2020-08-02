@@ -9,7 +9,7 @@
 
 //! ABI decoder.
 
-use crate::{Error, ParamType, Token, Word};
+use crate::{Error, ParamKind, Token, Word};
 
 use crate::std::Vec;
 
@@ -60,7 +60,7 @@ fn slice_data(data: &[u8]) -> Result<Vec<Word>, Error> {
 }
 
 /// Decodes ABI compliant vector of bytes into vector of tokens described by types param.
-pub fn decode(types: &[ParamType], data: &[u8]) -> Result<Vec<Token>, Error> {
+pub fn decode(types: &[ParamKind], data: &[u8]) -> Result<Vec<Token>, Error> {
 	let is_empty_bytes_valid_encoding = types.iter().all(|t| t.is_empty_bytes_valid_encoding());
 	if !is_empty_bytes_valid_encoding && data.is_empty() {
 		return Err(Error::InvalidName);
@@ -96,9 +96,9 @@ fn take_bytes(slices: &[Word], position: usize, len: usize) -> Result<BytesTaken
 	Ok(taken)
 }
 
-fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<DecodeResult, Error> {
+fn decode_param(param: &ParamKind, slices: &[Word], offset: usize) -> Result<DecodeResult, Error> {
 	match *param {
-		ParamType::Address => {
+		ParamKind::Address => {
 			let slice = peek(slices, offset)?;
 			let mut address = [0u8; 20];
 			address.copy_from_slice(&slice[12..]);
@@ -107,21 +107,21 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 
 			Ok(result)
 		}
-		ParamType::Int(_) => {
+		ParamKind::Int(_) => {
 			let slice = peek(slices, offset)?;
 
 			let result = DecodeResult { token: Token::Int(slice.clone().into()), new_offset: offset + 1 };
 
 			Ok(result)
 		}
-		ParamType::Uint(_) => {
+		ParamKind::Uint(_) => {
 			let slice = peek(slices, offset)?;
 
 			let result = DecodeResult { token: Token::Uint(slice.clone().into()), new_offset: offset + 1 };
 
 			Ok(result)
 		}
-		ParamType::Bool => {
+		ParamKind::Bool => {
 			let slice = peek(slices, offset)?;
 
 			let b = as_bool(slice)?;
@@ -129,14 +129,14 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 			let result = DecodeResult { token: Token::Bool(b), new_offset: offset + 1 };
 			Ok(result)
 		}
-		ParamType::FixedBytes(len) => {
+		ParamKind::FixedBytes(len) => {
 			// FixedBytes is anything from bytes1 to bytes32. These values
 			// are padded with trailing zeros to fill 32 bytes.
 			let taken = take_bytes(slices, offset, len)?;
 			let result = DecodeResult { token: Token::FixedBytes(taken.bytes), new_offset: taken.new_offset };
 			Ok(result)
 		}
-		ParamType::Bytes => {
+		ParamKind::Bytes => {
 			let offset_slice = peek(slices, offset)?;
 			let len_offset = (as_u32(offset_slice)? / 32) as usize;
 
@@ -148,7 +148,7 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 			let result = DecodeResult { token: Token::Bytes(taken.bytes), new_offset: offset + 1 };
 			Ok(result)
 		}
-		ParamType::String => {
+		ParamKind::String => {
 			let offset_slice = peek(slices, offset)?;
 			let len_offset = (as_u32(offset_slice)? / 32) as usize;
 
@@ -160,7 +160,7 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 			let result = DecodeResult { token: Token::String(taken.bytes), new_offset: offset + 1 };
 			Ok(result)
 		}
-		ParamType::Array(ref t) => {
+		ParamKind::Array(ref t) => {
 			let offset_slice = peek(slices, offset)?;
 			let len_offset = (as_u32(offset_slice)? / 32) as usize;
 			let len_slice = peek(slices, len_offset)?;
@@ -180,7 +180,7 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 
 			Ok(result)
 		}
-		ParamType::FixedArray(ref t, len) => {
+		ParamKind::FixedArray(ref t, len) => {
 			let mut tokens = Vec::with_capacity(len);
 			let is_dynamic = param.is_dynamic();
 
@@ -203,7 +203,7 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 
 			Ok(result)
 		}
-		ParamType::Tuple(ref t) => {
+		ParamKind::Tuple(ref t) => {
 			let is_dynamic = param.is_dynamic();
 
 			// The first element in a dynamic Tuple is an offset to the Tuple's data
@@ -238,27 +238,27 @@ fn decode_param(param: &ParamType, slices: &[Word], offset: usize) -> Result<Dec
 #[cfg(test)]
 mod tests {
 
-	use crate::{decode, ParamType, Token};
+	use crate::{decode, ParamKind, Token};
 	use hex_literal::hex;
 
 	#[test]
 	fn decode_from_empty_byte_slice() {
 		// these can NOT be decoded from empty byte slice
-		assert!(decode(&[ParamType::Address], &[]).is_err());
-		assert!(decode(&[ParamType::Bytes], &[]).is_err());
-		assert!(decode(&[ParamType::Int(0)], &[]).is_err());
-		assert!(decode(&[ParamType::Int(1)], &[]).is_err());
-		assert!(decode(&[ParamType::Int(0)], &[]).is_err());
-		assert!(decode(&[ParamType::Int(1)], &[]).is_err());
-		assert!(decode(&[ParamType::Bool], &[]).is_err());
-		assert!(decode(&[ParamType::String], &[]).is_err());
-		assert!(decode(&[ParamType::Array(Box::new(ParamType::Bool))], &[]).is_err());
-		assert!(decode(&[ParamType::FixedBytes(1)], &[]).is_err());
-		assert!(decode(&[ParamType::FixedArray(Box::new(ParamType::Bool), 1)], &[]).is_err());
+		assert!(decode(&[ParamKind::Address], &[]).is_err());
+		assert!(decode(&[ParamKind::Bytes], &[]).is_err());
+		assert!(decode(&[ParamKind::Int(0)], &[]).is_err());
+		assert!(decode(&[ParamKind::Int(1)], &[]).is_err());
+		assert!(decode(&[ParamKind::Int(0)], &[]).is_err());
+		assert!(decode(&[ParamKind::Int(1)], &[]).is_err());
+		assert!(decode(&[ParamKind::Bool], &[]).is_err());
+		assert!(decode(&[ParamKind::String], &[]).is_err());
+		assert!(decode(&[ParamKind::Array(Box::new(ParamKind::Bool))], &[]).is_err());
+		assert!(decode(&[ParamKind::FixedBytes(1)], &[]).is_err());
+		assert!(decode(&[ParamKind::FixedArray(Box::new(ParamKind::Bool), 1)], &[]).is_err());
 
 		// these are the only ones that can be decoded from empty byte slice
-		assert!(decode(&[ParamType::FixedBytes(0)], &[]).is_ok());
-		assert!(decode(&[ParamType::FixedArray(Box::new(ParamType::Bool), 0)], &[]).is_ok());
+		assert!(decode(&[ParamKind::FixedBytes(0)], &[]).is_ok());
+		assert!(decode(&[ParamKind::FixedArray(Box::new(ParamKind::Bool), 0)], &[]).is_ok());
 	}
 
 	#[test]
@@ -276,10 +276,10 @@ mod tests {
 		let tuple = Token::Tuple(vec![address1, address2, uint]);
 		let expected = vec![tuple];
 		let decoded = decode(
-			&[ParamType::Tuple(vec![
-				Box::new(ParamType::Address),
-				Box::new(ParamType::Address),
-				Box::new(ParamType::Uint(32)),
+			&[ParamKind::Tuple(vec![
+				Box::new(ParamKind::Address),
+				Box::new(ParamKind::Address),
+				Box::new(ParamKind::Uint(32)),
 			])],
 			&encoded,
 		)
@@ -304,7 +304,7 @@ mod tests {
 		let string2 = Token::String("gavofyork".as_bytes().to_vec());
 		let tuple = Token::Tuple(vec![string1, string2]);
 		let decoded =
-			decode(&[ParamType::Tuple(vec![Box::new(ParamType::String), Box::new(ParamType::String)])], &encoded)
+			decode(&[ParamKind::Tuple(vec![Box::new(ParamKind::String), Box::new(ParamKind::String)])], &encoded)
 				.unwrap();
 		let expected = vec![tuple];
 		assert_eq!(decoded, expected);
@@ -350,14 +350,14 @@ mod tests {
 		let outer_tuple = Token::Tuple(vec![string1, bool, string2, inner_tuple]);
 		let expected = vec![outer_tuple];
 		let decoded = decode(
-			&[ParamType::Tuple(vec![
-				Box::new(ParamType::String),
-				Box::new(ParamType::Bool),
-				Box::new(ParamType::String),
-				Box::new(ParamType::Tuple(vec![
-					Box::new(ParamType::String),
-					Box::new(ParamType::String),
-					Box::new(ParamType::Tuple(vec![Box::new(ParamType::String), Box::new(ParamType::String)])),
+			&[ParamKind::Tuple(vec![
+				Box::new(ParamKind::String),
+				Box::new(ParamKind::Bool),
+				Box::new(ParamKind::String),
+				Box::new(ParamKind::Tuple(vec![
+					Box::new(ParamKind::String),
+					Box::new(ParamKind::String),
+					Box::new(ParamKind::Tuple(vec![Box::new(ParamKind::String), Box::new(ParamKind::String)])),
 				])),
 			])],
 			&encoded,
@@ -386,11 +386,11 @@ mod tests {
 		let tuple = Token::Tuple(vec![uint, string, address1, address2]);
 		let expected = vec![tuple];
 		let decoded = decode(
-			&[ParamType::Tuple(vec![
-				Box::new(ParamType::Uint(32)),
-				Box::new(ParamType::String),
-				Box::new(ParamType::Address),
-				Box::new(ParamType::Address),
+			&[ParamKind::Tuple(vec![
+				Box::new(ParamKind::Uint(32)),
+				Box::new(ParamKind::String),
+				Box::new(ParamKind::Address),
+				Box::new(ParamKind::Address),
 			])],
 			&encoded,
 		)
@@ -427,15 +427,15 @@ mod tests {
 		let expected = vec![address1, tuple, address2, address3, bool2];
 		let decoded = decode(
 			&[
-				ParamType::Address,
-				ParamType::Tuple(vec![
-					Box::new(ParamType::Bool),
-					Box::new(ParamType::String),
-					Box::new(ParamType::String),
+				ParamKind::Address,
+				ParamKind::Tuple(vec![
+					Box::new(ParamKind::Bool),
+					Box::new(ParamKind::String),
+					Box::new(ParamKind::String),
 				]),
-				ParamType::Address,
-				ParamType::Address,
-				ParamType::Bool,
+				ParamKind::Address,
+				ParamKind::Address,
+				ParamKind::Bool,
 			],
 			&encoded,
 		)
@@ -466,14 +466,14 @@ mod tests {
 		let expected = vec![address1, tuple, address3, address4];
 		let decoded = decode(
 			&[
-				ParamType::Address,
-				ParamType::Tuple(vec![
-					Box::new(ParamType::Address),
-					Box::new(ParamType::Bool),
-					Box::new(ParamType::Bool),
+				ParamKind::Address,
+				ParamKind::Tuple(vec![
+					Box::new(ParamKind::Address),
+					Box::new(ParamKind::Bool),
+					Box::new(ParamKind::Bool),
 				]),
-				ParamType::Address,
-				ParamType::Address,
+				ParamKind::Address,
+				ParamKind::Address,
 			],
 			&encoded,
 		)
@@ -507,7 +507,7 @@ mod tests {
 		let array = Token::FixedArray(vec![s1, s2]);
 
 		let expected = vec![array];
-		let decoded = decode(&[ParamType::FixedArray(Box::new(ParamType::String), 2)], &encoded).unwrap();
+		let decoded = decode(&[ParamKind::FixedArray(Box::new(ParamKind::String), 2)], &encoded).unwrap();
 
 		assert_eq!(decoded, expected);
 	}
@@ -527,7 +527,7 @@ mod tests {
 
 		assert_eq!(
 			decode(
-				&[ParamType::Address, ParamType::FixedBytes(32), ParamType::FixedBytes(4), ParamType::String,],
+				&[ParamKind::Address, ParamKind::FixedBytes(32), ParamKind::FixedBytes(4), ParamKind::String,],
 				&encoded,
 			)
 			.unwrap(),

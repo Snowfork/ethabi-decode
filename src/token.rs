@@ -8,7 +8,7 @@
 // copied, modified, or distributed except according to those terms.
 
 //! Ethereum ABI params.
-use crate::{Address, ParamType, U256};
+use crate::{Address, ParamKind, U256};
 
 use crate::std::Vec;
 
@@ -70,49 +70,49 @@ impl Token {
 	///
 	/// Numeric types (`Int` and `Uint`) type check if the size of the token
 	/// type is of greater or equal size than the provided parameter type.
-	pub fn type_check(&self, param_type: &ParamType) -> bool {
+	pub fn type_check(&self, param_type: &ParamKind) -> bool {
 		match *self {
-			Token::Address(_) => *param_type == ParamType::Address,
-			Token::Bytes(_) => *param_type == ParamType::Bytes,
+			Token::Address(_) => *param_type == ParamKind::Address,
+			Token::Bytes(_) => *param_type == ParamKind::Bytes,
 			Token::Int(_) => {
-				if let ParamType::Int(_) = *param_type {
+				if let ParamKind::Int(_) = *param_type {
 					true
 				} else {
 					false
 				}
 			}
 			Token::Uint(_) => {
-				if let ParamType::Uint(_) = *param_type {
+				if let ParamKind::Uint(_) = *param_type {
 					true
 				} else {
 					false
 				}
 			}
-			Token::Bool(_) => *param_type == ParamType::Bool,
-			Token::String(_) => *param_type == ParamType::String,
+			Token::Bool(_) => *param_type == ParamKind::Bool,
+			Token::String(_) => *param_type == ParamKind::String,
 			Token::FixedBytes(ref bytes) => {
-				if let ParamType::FixedBytes(size) = *param_type {
+				if let ParamKind::FixedBytes(size) = *param_type {
 					size >= bytes.len()
 				} else {
 					false
 				}
 			}
 			Token::Array(ref tokens) => {
-				if let ParamType::Array(ref param_type) = *param_type {
+				if let ParamKind::Array(ref param_type) = *param_type {
 					tokens.iter().all(|t| t.type_check(param_type))
 				} else {
 					false
 				}
 			}
 			Token::FixedArray(ref tokens) => {
-				if let ParamType::FixedArray(ref param_type, size) = *param_type {
+				if let ParamKind::FixedArray(ref param_type, size) = *param_type {
 					size == tokens.len() && tokens.iter().all(|t| t.type_check(param_type))
 				} else {
 					false
 				}
 			}
 			Token::Tuple(ref tokens) => {
-				if let ParamType::Tuple(ref param_type) = *param_type {
+				if let ParamKind::Tuple(ref param_type) = *param_type {
 					tokens.iter().enumerate().all(|(i, t)| t.type_check(&param_type[i]))
 				} else {
 					false
@@ -194,7 +194,7 @@ impl Token {
 	}
 
 	/// Check if all the types of the tokens match the given parameter types.
-	pub fn types_check(tokens: &[Token], param_types: &[ParamType]) -> bool {
+	pub fn types_check(tokens: &[Token], param_types: &[ParamKind]) -> bool {
 		param_types.len() == tokens.len() && {
 			param_types.iter().zip(tokens).all(|(param_type, token)| token.type_check(param_type))
 		}
@@ -213,60 +213,60 @@ impl Token {
 
 #[cfg(test)]
 mod tests {
-	use crate::{ParamType, Token};
+	use crate::{ParamKind, Token};
 
 	#[test]
 	fn test_type_check() {
-		fn assert_type_check(tokens: Vec<Token>, param_types: Vec<ParamType>) {
+		fn assert_type_check(tokens: Vec<Token>, param_types: Vec<ParamKind>) {
 			assert!(Token::types_check(&tokens, &param_types))
 		}
 
-		fn assert_not_type_check(tokens: Vec<Token>, param_types: Vec<ParamType>) {
+		fn assert_not_type_check(tokens: Vec<Token>, param_types: Vec<ParamKind>) {
 			assert!(!Token::types_check(&tokens, &param_types))
 		}
 
-		assert_type_check(vec![Token::Uint(0.into()), Token::Bool(false)], vec![ParamType::Uint(256), ParamType::Bool]);
-		assert_type_check(vec![Token::Uint(0.into()), Token::Bool(false)], vec![ParamType::Uint(32), ParamType::Bool]);
+		assert_type_check(vec![Token::Uint(0.into()), Token::Bool(false)], vec![ParamKind::Uint(256), ParamKind::Bool]);
+		assert_type_check(vec![Token::Uint(0.into()), Token::Bool(false)], vec![ParamKind::Uint(32), ParamKind::Bool]);
 
-		assert_not_type_check(vec![Token::Uint(0.into())], vec![ParamType::Uint(32), ParamType::Bool]);
-		assert_not_type_check(vec![Token::Uint(0.into()), Token::Bool(false)], vec![ParamType::Uint(32)]);
+		assert_not_type_check(vec![Token::Uint(0.into())], vec![ParamKind::Uint(32), ParamKind::Bool]);
+		assert_not_type_check(vec![Token::Uint(0.into()), Token::Bool(false)], vec![ParamKind::Uint(32)]);
 		assert_not_type_check(
 			vec![Token::Bool(false), Token::Uint(0.into())],
-			vec![ParamType::Uint(32), ParamType::Bool],
+			vec![ParamKind::Uint(32), ParamKind::Bool],
 		);
 
-		assert_type_check(vec![Token::FixedBytes(vec![0, 0, 0, 0])], vec![ParamType::FixedBytes(4)]);
-		assert_type_check(vec![Token::FixedBytes(vec![0, 0, 0])], vec![ParamType::FixedBytes(4)]);
-		assert_not_type_check(vec![Token::FixedBytes(vec![0, 0, 0, 0])], vec![ParamType::FixedBytes(3)]);
+		assert_type_check(vec![Token::FixedBytes(vec![0, 0, 0, 0])], vec![ParamKind::FixedBytes(4)]);
+		assert_type_check(vec![Token::FixedBytes(vec![0, 0, 0])], vec![ParamKind::FixedBytes(4)]);
+		assert_not_type_check(vec![Token::FixedBytes(vec![0, 0, 0, 0])], vec![ParamKind::FixedBytes(3)]);
 
 		assert_type_check(
 			vec![Token::Array(vec![Token::Bool(false), Token::Bool(true)])],
-			vec![ParamType::Array(Box::new(ParamType::Bool))],
+			vec![ParamKind::Array(Box::new(ParamKind::Bool))],
 		);
 		assert_not_type_check(
 			vec![Token::Array(vec![Token::Bool(false), Token::Uint(0.into())])],
-			vec![ParamType::Array(Box::new(ParamType::Bool))],
+			vec![ParamKind::Array(Box::new(ParamKind::Bool))],
 		);
 		assert_not_type_check(
 			vec![Token::Array(vec![Token::Bool(false), Token::Bool(true)])],
-			vec![ParamType::Array(Box::new(ParamType::Address))],
+			vec![ParamKind::Array(Box::new(ParamKind::Address))],
 		);
 
 		assert_type_check(
 			vec![Token::FixedArray(vec![Token::Bool(false), Token::Bool(true)])],
-			vec![ParamType::FixedArray(Box::new(ParamType::Bool), 2)],
+			vec![ParamKind::FixedArray(Box::new(ParamKind::Bool), 2)],
 		);
 		assert_not_type_check(
 			vec![Token::FixedArray(vec![Token::Bool(false), Token::Bool(true)])],
-			vec![ParamType::FixedArray(Box::new(ParamType::Bool), 3)],
+			vec![ParamKind::FixedArray(Box::new(ParamKind::Bool), 3)],
 		);
 		assert_not_type_check(
 			vec![Token::FixedArray(vec![Token::Bool(false), Token::Uint(0.into())])],
-			vec![ParamType::FixedArray(Box::new(ParamType::Bool), 2)],
+			vec![ParamKind::FixedArray(Box::new(ParamKind::Bool), 2)],
 		);
 		assert_not_type_check(
 			vec![Token::FixedArray(vec![Token::Bool(false), Token::Bool(true)])],
-			vec![ParamType::FixedArray(Box::new(ParamType::Address), 2)],
+			vec![ParamKind::FixedArray(Box::new(ParamKind::Address), 2)],
 		);
 	}
 

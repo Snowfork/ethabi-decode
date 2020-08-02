@@ -12,7 +12,6 @@
 extern crate alloc;
 
 mod decoder;
-mod errors;
 mod event;
 mod param;
 mod std;
@@ -20,15 +19,29 @@ mod token;
 
 pub use crate::{
 	decoder::decode,
-	errors::Error,
-	event::{Event, Param},
-	param::ParamType,
+	event::Event,
+	param::{Param, ParamKind},
 	token::Token,
 };
 
+#[derive(Debug)]
+pub enum Error {
+	/// Invalid entity such as a bad function name.
+	InvalidName,
+	/// Invalid data.
+	InvalidData
+}
+
+/// ABI Address
 pub use ethereum_types::Address;
-pub use ethereum_types::H256;
-pub use ethereum_types::U256;
 
 /// ABI word.
 pub type Word = [u8; 32];
+
+/// ABI Int and UInt
+pub use ethereum_types::U256;
+
+/// Hash
+pub use ethereum_types::H256;
+
+

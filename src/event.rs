@@ -12,16 +12,8 @@ use crate::std::BTreeMap;
 use crate::std::Vec;
 use tiny_keccak::Keccak;
 
-use crate::{decode, Error, ParamType, Token, H256};
+use crate::{decode, Error, Param, ParamKind, Token, H256};
 
-/// Event param specification.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Param {
-	/// Param type.
-	pub kind: ParamType,
-	/// Indexed flag. If true, param is used to build block bloom.
-	pub indexed: bool,
-}
 
 /// Contract event.
 #[derive(Clone, Debug, PartialEq)]
@@ -56,13 +48,13 @@ impl Event {
 	// This applies to strings, arrays, structs and bytes to follow the encoding of
 	// these indexed param types according to
 	// https://solidity.readthedocs.io/en/develop/abi-spec.html#encoding-of-indexed-event-parameters
-	fn convert_topic_param_type(&self, kind: &ParamType) -> ParamType {
+	fn convert_topic_param_type(&self, kind: &ParamKind) -> ParamKind {
 		match kind {
-			ParamType::String
-			| ParamType::Bytes
-			| ParamType::Array(_)
-			| ParamType::FixedArray(_, _)
-			| ParamType::Tuple(_) => ParamType::FixedBytes(32),
+			ParamKind::String
+			| ParamKind::Bytes
+			| ParamKind::Array(_)
+			| ParamKind::FixedArray(_, _)
+			| ParamKind::Tuple(_) => ParamKind::FixedBytes(32),
 			_ => kind.clone(),
 		}
 	}
@@ -88,7 +80,7 @@ impl Event {
 		};
 
 		let topic_types =
-			topic_params.iter().map(|p| self.convert_topic_param_type(&p.kind)).collect::<Vec<ParamType>>();
+			topic_params.iter().map(|p| self.convert_topic_param_type(&p.kind)).collect::<Vec<ParamKind>>();
 
 		let flat_topics = topics.into_iter().skip(to_skip).flat_map(|t| t.as_ref().to_vec()).collect::<Vec<u8>>();
 
@@ -101,7 +93,7 @@ impl Event {
 
 		let topics_named_tokens = topic_params_index.into_iter().zip(topic_tokens.into_iter());
 
-		let data_types = data_params.iter().map(|p| p.kind.clone()).collect::<Vec<ParamType>>();
+		let data_types = data_params.iter().map(|p| p.kind.clone()).collect::<Vec<ParamKind>>();
 		let data_tokens = decode(&data_types, &data)?;
 		let data_named_tokens = data_params_index.into_iter().zip(data_tokens.into_iter());
 
@@ -117,7 +109,7 @@ impl Event {
 #[cfg(test)]
 mod tests {
 
-	use crate::{token::Token, Event, Param, ParamType, H256};
+	use crate::{token::Token, Event, Param, ParamKind, H256};
 	use hex::FromHex;
 	use tiny_keccak::Keccak;
 
@@ -134,13 +126,13 @@ mod tests {
 		let mut event = Event {
 			signature: "foo(int256,int256,address,address,string,int256[],address[5])",
 			inputs: vec![
-				Param { kind: ParamType::Int(256), indexed: false },
-				Param { kind: ParamType::Int(256), indexed: true },
-				Param { kind: ParamType::Address, indexed: false },
-				Param { kind: ParamType::Address, indexed: true },
-				Param { kind: ParamType::String, indexed: true },
-				Param { kind: ParamType::Array(Box::new(ParamType::Int(256))), indexed: true },
-				Param { kind: ParamType::FixedArray(Box::new(ParamType::Address), 5), indexed: true },
+				Param { kind: ParamKind::Int(256), indexed: false },
+				Param { kind: ParamKind::Int(256), indexed: true },
+				Param { kind: ParamKind::Address, indexed: false },
+				Param { kind: ParamKind::Address, indexed: true },
+				Param { kind: ParamKind::String, indexed: true },
+				Param { kind: ParamKind::Array(Box::new(ParamKind::Int(256))), indexed: true },
+				Param { kind: ParamKind::FixedArray(Box::new(ParamKind::Address), 5), indexed: true },
 			],
 			anonymous: false,
 		};
