@@ -17,16 +17,16 @@ use crate::{decode, Error, Param, ParamKind, Token, H256};
 
 /// Contract event.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Event {
+pub struct Event<'a> {
 	/// Event signature. Like "Foo(int32,bytes)".
-	pub signature: &'static str,
+	pub signature: &'a str,
 	/// Event input.
-	pub inputs: Vec<Param>,
+	pub inputs: &'a [Param],
 	/// If anonymous, event cannot be found using `from` filter.
 	pub anonymous: bool,
 }
 
-impl Event {
+impl<'a> Event<'a> {
 	fn signature_keccak256(&self) -> H256 {
 		let mut result = [0u8; 32];
 		let mut sponge = Keccak::new_keccak256();
@@ -60,7 +60,7 @@ impl Event {
 		}
 	}
 
-	pub fn decode(&mut self, topics: Vec<H256>, data: Vec<u8>) -> Result<Vec<Token>, Error> {
+	pub fn decode(&self, topics: Vec<H256>, data: Vec<u8>) -> Result<Vec<Token>, Error> {
 
 		// Take first topic if event is not anonymous
 		let to_skip = if self.anonymous {
@@ -127,10 +127,9 @@ mod tests {
 
 	#[test]
 	fn test_decoding_event() {
-		let mut event = Event {
+		let event = Event {
 			signature: "foo(int256,int256,address,address,string,int256[],address[5])",
-			inputs: vec![
-				Param { kind: ParamKind::Int(256), indexed: false },
+			inputs: &[Param { kind: ParamKind::Int(256), indexed: false },
 				Param { kind: ParamKind::Int(256), indexed: true },
 				Param { kind: ParamKind::Address, indexed: false },
 				Param { kind: ParamKind::Address, indexed: true },
