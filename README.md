@@ -30,7 +30,7 @@ use ethabi_decode::{Event, ParamKind, Token};
 
 fn decode_event_log(topics: Vec<H256>, data: Vec<u8>) -> Vec<Token> {
 
-    let mut event = Event {
+    let event = Event {
       signature: "SomeEvent(address,int256)",
       inputs: vec![
         Param { kind: ParamKind::Address, indexed: true },
