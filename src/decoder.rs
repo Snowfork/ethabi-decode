@@ -4,12 +4,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE or
-// http://www.apache.org/licenses/LICENSE-2.0>. This file may not be 
+// http://www.apache.org/licenses/LICENSE-2.0>. This file may not be
 // copied, modified, or distributed except according to those terms.
 
 //! ABI decoder.
 
-use crate::{Error, ParamKind, Token, Word};
+use crate::{util::slice_data, Error, ParamKind, Token, Word};
 
 use crate::std::Vec;
 
@@ -40,23 +40,6 @@ fn as_bool(slice: &Word) -> Result<bool, Error> {
 	}
 
 	Ok(slice[31] == 1)
-}
-
-/// Converts a vector of bytes with len equal n * 32, to a vector of slices.
-fn slice_data(data: &[u8]) -> Result<Vec<Word>, Error> {
-	if data.len() % 32 != 0 {
-		return Err(Error::InvalidData);
-	}
-
-	let times = data.len() / 32;
-	let mut result = Vec::with_capacity(times);
-	for i in 0..times {
-		let mut slice = [0u8; 32];
-		let offset = 32 * i;
-		slice.copy_from_slice(&data[offset..offset + 32]);
-		result.push(slice);
-	}
-	Ok(result)
 }
 
 /// Decodes ABI compliant vector of bytes into vector of tokens described by types param.
