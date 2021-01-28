@@ -104,6 +104,14 @@ fn decode_param(param: &ParamKind, slices: &[Word], offset: usize) -> Result<Dec
 
 			Ok(result)
 		}
+		ParamKind::Uint64(_) => {
+			let slice = peek(slices, offset)?;
+			let mut bytes = [0u8; 8];
+			bytes.copy_from_slice(&slice[24..]);
+
+			let result = DecodeResult { token: Token::Uint64(u64::from_be_bytes(bytes)), new_offset: offset + 1 };
+			Ok(result)
+		}
 		ParamKind::Bool => {
 			let slice = peek(slices, offset)?;
 

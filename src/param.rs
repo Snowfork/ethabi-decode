@@ -30,6 +30,8 @@ pub enum ParamKind {
 	Int(usize),
 	/// Unsigned integer.
 	Uint(usize),
+	/// Unsigned integer.
+	Uint64(u64),
 	/// Boolean.
 	Bool,
 	/// String.
@@ -77,6 +79,7 @@ mod tests {
 		assert_eq!(ParamKind::Bytes.is_dynamic(), true);
 		assert_eq!(ParamKind::FixedBytes(32).is_dynamic(), false);
 		assert_eq!(ParamKind::Uint(256).is_dynamic(), false);
+		assert_eq!(ParamKind::Uint64(54).is_dynamic(), false);
 		assert_eq!(ParamKind::Int(64).is_dynamic(), false);
 		assert_eq!(ParamKind::Bool.is_dynamic(), false);
 		assert_eq!(ParamKind::String.is_dynamic(), true);

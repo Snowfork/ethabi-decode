@@ -141,6 +141,11 @@ fn encode_token(token: &Token) -> Mediate {
 		Token::FixedBytes(ref bytes) => Mediate::Raw(pad_fixed_bytes(bytes)),
 		Token::Int(int) => Mediate::Raw(vec![int.into()]),
 		Token::Uint(uint) => Mediate::Raw(vec![uint.into()]),
+		Token::Uint64(uint) => {
+			let mut padded = [0u8; 32];
+			padded[24..].copy_from_slice(&uint.to_be_bytes());
+			Mediate::Raw(vec![padded])
+		}
 		Token::Bool(b) => {
 			let mut value = [0u8; 32];
 			if b {
@@ -497,6 +502,13 @@ mod tests {
 		uint[31] = 4;
 		let encoded = encode(&vec![Token::Uint(uint.into())]);
 		let expected = hex!("0000000000000000000000000000000000000000000000000000000000000004");
+		assert_eq!(encoded, expected);
+	}
+
+	#[test]
+	fn encode_uint64() {
+		let encoded = encode(&vec![Token::Uint64(256)]);
+		let expected = hex!("0000000000000000000000000000000000000000000000000000000000000100");
 		assert_eq!(encoded, expected);
 	}
 

@@ -36,10 +36,14 @@ pub enum Token {
 	///
 	/// solidity name: int
 	Int(U256),
-	/// Unisnged integer.
+	/// Unsigned integer.
 	///
 	/// solidity name: uint
 	Uint(U256),
+	/// Unsigned 64-bit integer.
+	///
+	/// solidity name: uint64
+	Uint64(u64),
 	/// Boolean value.
 	///
 	/// solidity name: bool
@@ -83,6 +87,13 @@ impl Token {
 			}
 			Token::Uint(_) => {
 				if let ParamKind::Uint(_) = *param_type {
+					true
+				} else {
+					false
+				}
+			}
+			Token::Uint64(_) => {
+				if let ParamKind::Uint64(_) = *param_type {
 					true
 				} else {
 					false
@@ -157,6 +168,14 @@ impl Token {
 	pub fn to_uint(self) -> Option<U256> {
 		match self {
 			Token::Uint(uint) => Some(uint),
+			_ => None,
+		}
+	}
+
+	/// Converts token to...
+	pub fn to_uint64(self) -> Option<u64> {
+		match self {
+			Token::Uint64(uint) => Some(uint),
 			_ => None,
 		}
 	}
