@@ -21,7 +21,7 @@ mod util;
 
 pub use crate::{
 	decoder::decode,
-	encoder::encode,
+	encoder::{encode, encode_function},
 	event::Event,
 	param::{Param, ParamKind},
 	token::Token,

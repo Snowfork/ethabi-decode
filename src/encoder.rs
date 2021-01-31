@@ -9,7 +9,7 @@
 //! ABI encoder.
 
 use crate::{util::pad_u32, Token, Word};
-
+use tiny_keccak::Keccak;
 use crate::std::{vec, Vec};
 
 fn pad_bytes(bytes: &[u8]) -> Vec<Word> {
@@ -129,6 +129,16 @@ pub fn encode(tokens: &[Token]) -> Vec<u8> {
 	encode_head_tail(mediates).iter().flat_map(|word| word.to_vec()).collect()
 }
 
+pub fn encode_function(signature: &str, inputs: &[Token]) -> Vec<u8> {
+	let mut signed: [u8; 4] = [0; 4];
+	let mut sponge = Keccak::new_keccak256();
+	sponge.update(signature.as_ref());
+	sponge.finalize(&mut signed);
+	let encoded = encode(inputs);
+	signed.to_vec().into_iter().chain(encoded.into_iter()).collect()
+}
+
+
 fn encode_token(token: &Token) -> Mediate {
 	match *token {
 		Token::Address(ref address) => {
@@ -177,7 +187,7 @@ fn encode_token(token: &Token) -> Mediate {
 
 #[cfg(test)]
 mod tests {
-	use crate::{encode, util::pad_u32, Token};
+	use crate::{encode, encode_function, util::pad_u32, Token};
 	use hex_literal::hex;
 
 	#[test]
@@ -812,6 +822,24 @@ mod tests {
 		"
 		)
 		.to_vec();
+		assert_eq!(encoded, expected);
+	}
+
+	#[test]
+	fn test_function_encode_call() {
+		let signature = "baz(uint32,bool)";
+
+		let mut uint = [0u8; 32];
+		uint[31] = 69;
+
+		let encoded = encode_function(signature, &[Token::Uint(uint.into()), Token::Bool(true)]);
+		let expected = hex!(
+			"
+			cdcd77c000000000000000000000000000000000000000000000000000000000
+			0000004500000000000000000000000000000000000000000000000000000000
+			00000001
+			"
+		).to_vec();
 		assert_eq!(encoded, expected);
 	}
 }
