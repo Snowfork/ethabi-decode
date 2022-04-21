@@ -1,8 +1,8 @@
 [package]
 name = "ethabi-decode"
-version = "1.3.2"
+version = "1.3.3"
 authors = ["Vincent Geddes <vincent.geddes@hey.com>"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 keywords = ["ethereum", "eth", "abi", "solidity"]
 description = "Decoding of ABI-encoded data and event logs"
