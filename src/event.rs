@@ -4,13 +4,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE or
-// http://www.apache.org/licenses/LICENSE-2.0>. This file may not be 
+// http://www.apache.org/licenses/LICENSE-2.0>. This file may not be
 // copied, modified, or distributed except according to those terms.
 
 //! Contract event.
 use crate::std::BTreeMap;
 use crate::std::Vec;
-use tiny_keccak::Keccak;
+use tiny_keccak::{Hasher, Keccak};
 
 use crate::{decode, Error, Param, ParamKind, Token, H256};
 
@@ -29,7 +29,7 @@ pub struct Event<'a> {
 impl<'a> Event<'a> {
 	fn signature_keccak256(&self) -> H256 {
 		let mut result = [0u8; 32];
-		let mut sponge = Keccak::new_keccak256();
+		let mut sponge = Keccak::v256();
 		sponge.update(self.signature.as_ref());
 		sponge.finalize(&mut result);
 		result.into()
@@ -115,11 +115,11 @@ mod tests {
 
 	use crate::{token::Token, Event, Param, ParamKind, H256};
 	use hex::FromHex;
-	use tiny_keccak::Keccak;
+	use tiny_keccak::{Hasher, Keccak};
 
 	fn keccak256(data: &str) -> H256 {
 		let mut result = [0u8; 32];
-		let mut sponge = Keccak::new_keccak256();
+		let mut sponge = Keccak::v256();
 		sponge.update(data.as_ref());
 		sponge.finalize(&mut result);
 		result.into()
