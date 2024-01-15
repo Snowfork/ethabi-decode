@@ -1,11 +1,13 @@
 [package]
 name = "ethabi-decode"
-version = "1.4.0"
-authors = ["Vincent Geddes <vincent.geddes@hey.com>"]
+version = "1.0.0"
+authors = ["Vincent Geddes <vincent@snowfork.com"]
 edition = "2021"
 license = "Apache-2.0"
-keywords = ["ethereum", "eth", "abi", "solidity"]
+keywords = ["ethereum"]
+categories = ["cryptography::cryptocurrencies"]
 description = "Decoding of ABI-encoded data and event logs"
+repository = "https://github.com/Snowfork/ethabi-decode.git"
 
 [dependencies]
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
@@ -20,5 +22,5 @@ paste = "1.0.12"
 [features]
 default = ["std"]
 std = [
-    'ethereum-types/std',
+    "ethereum-types/std",
 ]
