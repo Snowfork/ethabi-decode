@@ -16,7 +16,7 @@ ethereum-types = { version = "0.14.1", default-features = false }
 [dev-dependencies]
 hex = { version = "2.0", package = "rustc-hex" }
 hex-literal = "0.4.0"
-uint = { version = "0.9.5", default-features = false }
+uint = { git = "https://github.com/paritytech/parity-common.git", branch = "master", default-features = false }
 paste = "1.0.12"
 
 [features]
