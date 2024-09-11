@@ -9,7 +9,7 @@
 
 //! ABI decoder.
 
-use crate::{util::slice_data, Error, ParamKind, Token, Word};
+use crate::{util::slice_data, Error, ParamKind, Token, Word, U256};
 
 use crate::std::Vec;
 
@@ -93,14 +93,14 @@ fn decode_param(param: &ParamKind, slices: &[Word], offset: usize) -> Result<Dec
 		ParamKind::Int(_) => {
 			let slice = peek(slices, offset)?;
 
-			let result = DecodeResult { token: Token::Int(slice.clone().into()), new_offset: offset + 1 };
+			let result = DecodeResult { token: Token::Int(U256::from_big_endian(slice)), new_offset: offset + 1 };
 
 			Ok(result)
 		}
 		ParamKind::Uint(_) => {
 			let slice = peek(slices, offset)?;
 
-			let result = DecodeResult { token: Token::Uint(slice.clone().into()), new_offset: offset + 1 };
+			let result = DecodeResult { token: Token::Uint(U256::from_big_endian(slice)), new_offset: offset + 1 };
 
 			Ok(result)
 		}
@@ -221,7 +221,7 @@ fn decode_param(param: &ParamKind, slices: &[Word], offset: usize) -> Result<Dec
 #[cfg(test)]
 mod tests {
 
-	use crate::{decode, ParamKind, Token};
+	use crate::{decode, ParamKind, Token, U256};
 	use hex_literal::hex;
 
 	#[test]
@@ -255,7 +255,7 @@ mod tests {
 		);
 		let address1 = Token::Address([0x11u8; 20].into());
 		let address2 = Token::Address([0x22u8; 20].into());
-		let uint = Token::Uint([0x11u8; 32].into());
+		let uint = Token::Uint(U256::from_big_endian(&[0x11u8; 32]));
 		let tuple = Token::Tuple(vec![address1, address2, uint]);
 		let expected = vec![tuple];
 		let decoded = decode(
@@ -362,7 +362,7 @@ mod tests {
 			6761766f66796f726b0000000000000000000000000000000000000000000000
 		"
 		);
-		let uint = Token::Uint([0x11u8; 32].into());
+		let uint = Token::Uint(U256::from_big_endian(&[0x11u8; 32]));
 		let string = Token::String("gavofyork".as_bytes().to_vec());
 		let address1 = Token::Address([0x11u8; 20].into());
 		let address2 = Token::Address([0x22u8; 20].into());

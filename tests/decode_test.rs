@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use ethabi_decode::{decode, ParamKind, Token};
+use ethabi_decode::{decode, ParamKind, Token, U256};
 use hex_literal::hex;
 use paste;
 
@@ -100,7 +100,7 @@ test_encode_decode! {
 test_encode_decode! {
 	name: int,
 	types: [ParamKind::Int(32)],
-	tokens: [Token::Int([0x11u8; 32].into())],
+	tokens: [Token::Int(U256::from_big_endian(&[0x11u8; 32]))],
 	data: "1111111111111111111111111111111111111111111111111111111111111111"
 }
 test_encode_decode! {
@@ -109,7 +109,7 @@ test_encode_decode! {
 	tokens: {
 		let mut int = [0u8; 32];
 		int[31] = 4;
-		[Token::Int(int.into())]
+		[Token::Int(U256::from_big_endian(&int))]
 	},
 	data: "0000000000000000000000000000000000000000000000000000000000000004"
 }
@@ -118,7 +118,7 @@ test_encode_decode! {
 test_encode_decode! {
 	name: uint,
 	types: [ParamKind::Uint(32)],
-	tokens: [Token::Uint([0x11u8; 32].into())],
+	tokens: [Token::Uint(U256::from_big_endian(&[0x11u8; 32]))],
 	data: "1111111111111111111111111111111111111111111111111111111111111111"
 }
 test_encode_decode! {
@@ -127,7 +127,7 @@ test_encode_decode! {
 	tokens: {
 		let mut uint = [0u8; 32];
 		uint[31] = 4;
-		[Token::Uint(uint.into())]
+		[Token::Uint(U256::from_big_endian(&uint))]
 	},
 	data: "0000000000000000000000000000000000000000000000000000000000000004"
 }

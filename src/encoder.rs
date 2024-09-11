@@ -8,9 +8,9 @@
 
 //! ABI encoder.
 
+use crate::std::{vec, Vec};
 use crate::{util::pad_u32, Token, Word};
 use tiny_keccak::{Hasher, Keccak};
-use crate::std::{vec, Vec};
 
 fn pad_bytes(bytes: &[u8]) -> Vec<Word> {
 	let mut result = vec![pad_u32(bytes.len() as u32)];
@@ -138,7 +138,6 @@ pub fn encode_function(signature: &str, inputs: &[Token]) -> Vec<u8> {
 	signed.to_vec().into_iter().chain(encoded.into_iter()).collect()
 }
 
-
 fn encode_token(token: &Token) -> Mediate {
 	match *token {
 		Token::Address(ref address) => {
@@ -149,8 +148,8 @@ fn encode_token(token: &Token) -> Mediate {
 		Token::Bytes(ref bytes) => Mediate::Prefixed(pad_bytes(bytes)),
 		Token::String(ref s) => Mediate::Prefixed(pad_bytes(s.as_ref())),
 		Token::FixedBytes(ref bytes) => Mediate::Raw(pad_fixed_bytes(bytes)),
-		Token::Int(int) => Mediate::Raw(vec![int.into()]),
-		Token::Uint(uint) => Mediate::Raw(vec![uint.into()]),
+		Token::Int(int) => Mediate::Raw(vec![int.to_big_endian()]),
+		Token::Uint(uint) => Mediate::Raw(vec![uint.to_big_endian()]),
 		Token::Bool(b) => {
 			let mut value = [0u8; 32];
 			if b {
@@ -187,7 +186,7 @@ fn encode_token(token: &Token) -> Mediate {
 
 #[cfg(test)]
 mod tests {
-	use crate::{encode, encode_function, util::pad_u32, Token};
+	use crate::{encode, encode_function, util::pad_u32, Token, U256};
 	use hex_literal::hex;
 
 	#[test]
@@ -505,7 +504,7 @@ mod tests {
 	fn encode_uint() {
 		let mut uint = [0u8; 32];
 		uint[31] = 4;
-		let encoded = encode(&vec![Token::Uint(uint.into())]);
+		let encoded = encode(&vec![Token::Uint(U256::from_big_endian(&uint))]);
 		let expected = hex!("0000000000000000000000000000000000000000000000000000000000000004");
 		assert_eq!(encoded, expected);
 	}
@@ -514,7 +513,7 @@ mod tests {
 	fn encode_int() {
 		let mut int = [0u8; 32];
 		int[31] = 4;
-		let encoded = encode(&vec![Token::Int(int.into())]);
+		let encoded = encode(&vec![Token::Int(U256::from_big_endian(&int))]);
 		let expected = hex!("0000000000000000000000000000000000000000000000000000000000000004");
 		assert_eq!(encoded, expected);
 	}
@@ -706,7 +705,7 @@ mod tests {
 
 	#[test]
 	fn encode_complex_tuple() {
-		let uint = Token::Uint([0x11u8; 32].into());
+		let uint = Token::Uint(U256::from_big_endian(&[0x11u8; 32]));
 		let string = Token::String("gavofyork".into());
 		let address1 = Token::Address([0x11u8; 20].into());
 		let address2 = Token::Address([0x22u8; 20].into());
@@ -832,14 +831,15 @@ mod tests {
 		let mut uint = [0u8; 32];
 		uint[31] = 69;
 
-		let encoded = encode_function(signature, &[Token::Uint(uint.into()), Token::Bool(true)]);
+		let encoded = encode_function(signature, &[Token::Uint(U256::from_big_endian(&uint)), Token::Bool(true)]);
 		let expected = hex!(
 			"
 			cdcd77c000000000000000000000000000000000000000000000000000000000
 			0000004500000000000000000000000000000000000000000000000000000000
 			00000001
 			"
-		).to_vec();
+		)
+		.to_vec();
 		assert_eq!(encoded, expected);
 	}
 }
